@@ -1,0 +1,3 @@
+---
+- name: Reload nginx
+  action: systed name=nginx state=restarted

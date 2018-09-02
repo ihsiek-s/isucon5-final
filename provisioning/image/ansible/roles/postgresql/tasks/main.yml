@@ -1,0 +1,117 @@
+---
+- name: Install python-psycopg2 for Ubuntu
+  apt:
+    name: python-psycopg2
+    state: present
+  when: ansible_os_family == 'Debian'
+
+- name: Add apt-key
+  apt_key:
+    url: https://www.postgresql.org/media/keys/ACCC4CF8.asc
+    state: present
+  when: ansible_os_family == 'Debian'
+
+- name:
+  apt_repository:
+    repo: 'deb http://apt.postgresql.org/pub/repos/apt/ trusty-pgdg main'
+    state: present
+    update_cache: yes
+  when: ansible_os_family == 'Debian'
+
+- name: Install postgresql
+  apt:
+    name: '{{ item }}'
+    state: present
+  with_items:
+    - postgresql-9.4
+    - postgresql-contrib-9.4
+    - postgresql-client-9.4
+  when: ansible_os_family == 'Debian'
+
+- name: copy postgresql configurations
+  copy:
+    src: '{{ items.src }}'
+    dest: '{{ items.dest }}'
+    owner: postgres
+    group: postgres
+    mode: 0644
+  with_items:
+    - { src: postgresql.conf, dest: /etc/postgresql/9.4/main/postgresql.conf }
+    - { src: pg_hba.conf, dest: /etc/postgresql/9.4/main/pg_hba.conf }
+  notify:
+    - restart postgresql
+  when: ansible_os_family == 'Debian'
+
+- name: Install python-psycopg2 for CentOS 7
+  yum:
+    name: python-psycopg2
+    state: present
+  when: ansible_os_family == 'RedHat'
+
+- name: Install postgresql rpm for CentOS 7
+  yum:
+    name: http://download.postgresql.org/pub/repos/yum/9.4/redhat/rhel-7-x86_64/pgdg-redhat94-9.4-3.noarch.rpm
+    state: present
+  when: ansible_os_family == 'RedHat'
+
+- name: Install postgresql for CentOS 7
+  yum:
+    name: '{{ item }}'
+    state: present
+  with_items:
+    - "@PostgreSQL Database Server 9.4 PGDG"
+  when: ansible_os_family == 'RedHat'
+
+- name: copy postgresql configurations
+  copy:
+    src: '{{ items.src }}'
+    dest: '{{ items.dest }}'
+    owner: postgres
+    group: postgres
+    mode: 0644
+  with_items:
+    - { src: postgresql.conf, dest: /var/lib/pgsql/9.4/data/postgresql.conf }
+    - { src: pg_hba.conf, dest: /var/lib/pgsql/9.4/data/pg_hba.conf }
+  notify:
+    - restart postgresql
+  when: ansible_os_family == 'Debian'
+
+- name: Enable and start service postgresql
+  systemd:
+    name: postgresql
+    state: started
+    enabled: true
+
+- name: Add postgresql user
+  postgresql_user:
+    name: isucon
+  become_user: postgres
+
+- name: Create database
+  postgresql_db:
+    name: isucon5f
+    owner: isucon
+    encoding: utf8
+    template: template0
+  become_user: postgres
+
+- name: Add postgresql extentions
+  postgresql_ext:
+    name: '{{ item }}'
+    db: isucon5f
+  with_items:
+    - pgcrypto
+  become_user: postgres
+
+- name: Copy dump file
+  copy:
+    src: schema.sql
+    dest: /tmp/schema.sql
+
+- name: Import dump file
+  shell: cat /tmp/schema.sql | psql isucon5f
+
+- name: Remove dump file
+  file:
+    path: /tmp/schema.sql
+    state: absent

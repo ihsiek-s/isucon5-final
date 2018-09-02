@@ -1,0 +1,29 @@
+---
+- name: Install nginx
+  apt:
+    name: nginx
+    state: present
+  when: ansible_os_family == 'Debian'
+
+- name: Enable and start service nginx
+  systemd:
+    name: nginx
+    state: started
+    enabled: true
+
+- name: Setup nginx
+  copy:
+    src: '{{ item }}'
+    dest: '/etc/nginx/{{ item }}'
+    owner: root
+    group: root
+    mode: 0644
+  with_items:
+    - nginx.conf
+    - nginx.php.conf
+  notify:
+    - reload nginx
+- name:
+  apt:
+    name: python-psycopg2
+    state: present

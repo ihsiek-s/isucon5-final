@@ -1,0 +1,133 @@
+---
+- name: Setup sources.list for Ubuntu
+  copy:
+    src: sources.list
+    dest: /etc/apt/sources.list
+    owner: root
+    mode: 0644
+  when: ansible_os_family == 'Debian'
+
+- name: Install python-selinux for Ubuntu
+  apt:
+    name: python-selinux
+    state: present
+    update_cache: true
+  when: ansible_os_family == 'Debian'
+
+- name: Stop AppArmor for Ubuntu
+  service:
+    name: apparmor
+    enabled: no
+    state: stopped
+  when: ansible_os_family == 'Debian'
+
+- name: Install Dependencies for Ubuntu
+  apt:
+    name: '{{ item }}'
+    state: present
+  with_items:
+    - git
+    - gcc
+    - patch
+    - autoconf
+    - automake
+    - bison
+    - build-essential
+    - libssl-dev
+    - libyaml-dev
+    - libreadline6-dev
+    - zlib1g-dev
+    - libncurses5-dev
+    - libffi-dev
+    - libgdbm3
+    - libgdbm-dev
+    - libmysqlclient-dev
+    - libpq-dev
+    - libcurl4-openssl-dev
+    - libjpeg-turbo8
+    - libjpeg-turbo8-dev
+    - libpng12-0
+    - libpng12-dev
+    - libmcrypt4
+    - libmcrypt-dev
+    - libtidy-0.99-0
+    - libtidy-dev
+    - libxml2-dev
+    - libxslt1-dev
+    - readline-common
+    - re2c
+    - curl
+    - pkg-config
+  when: ansible_os_family == 'Debian'
+
+- name: Remove conflict with Dependencies for CentOS 7
+  yum:
+    name: '{{ item }}'
+    state: removed
+  with_items:
+    - mariadb*
+
+- name: Install Dependencies for CentOS 7
+  yum:
+    name: '{{ item }}'
+    state: present
+    update_cache: true
+  with_items:
+    - git
+    - gcc
+    - curl
+    - patch
+    - autoconf
+    - automake
+    - bison
+    - "@Development Tools"
+    - kernel-devel
+    - kernel-headers
+    - openssl-devel
+    - libyaml-devel
+    - readline-devel
+    - zlib-devel
+    - ncurses-devel
+    - libffi-devel
+    - gdbm
+    - gdbm-devel
+    - libcurl-devel
+    - libjpeg-turbo-devel
+    - libpng-devel
+    - libicu-devel
+    - libxml2-devel
+    - libxslt-devel
+    - readline-devel
+    - pkgconfig
+    - bzip2-devel
+  when: ansible_os_family == 'RedHat'
+
+- name: Install rpm for CentOS 7
+  yum:
+    name: '{{ item }}'
+    state: present
+  with_items:
+    - http://dev.mysql.com/get/mysql57-community-release-el7-7.noarch.rpm
+    - epel-release
+  when: ansible_os_family == 'RedHat'
+
+- name: Install Dependencies from mysql57-community for CentOS 7
+  yum:
+    name: '{{ item }}'
+    state: present
+    enablerepo: mysql57-community
+  with_items:
+    - mysql-community-devel
+  when: ansible_os_family == 'RedHat'
+
+- name: Install Dependencies from EPEL for CentOS 7
+  yum:
+    name: '{{ item }}'
+    state: present
+    enablerepo: epel
+  with_items:
+    - libtidy-devel
+    - re2c
+    - libpqxx-devel
+    - libmcrypt-devel
+  when: ansible_os_family == 'RedHat'
