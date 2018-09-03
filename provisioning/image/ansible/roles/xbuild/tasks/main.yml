@@ -60,6 +60,7 @@
   with_items:
     - 'ppa:webupd8team/java'
     - 'ppa:cwchien/gradle'
+  when: ansible_os_family == 'Debian'
 
 - name: Autoaccept license for Java8
   debconf:
@@ -67,6 +68,7 @@
     question: 'shared/accepted-oracle-license-v1-1'
     value: 'true'
     vtype: 'select'
+  when: ansible_os_family == 'Debian'
 
 - name: Insall java
   apt:
@@ -77,6 +79,7 @@
     - oracle-java8-set-default
     - ca-certificates
     - gradle-2.8
+  when: ansible_os_family == 'Debian'
 
 - name: Create symlink to java
   file:
@@ -85,3 +88,4 @@
     owner: root
     group: root
     state: link
+  when: ansible_os_family == 'Debian'

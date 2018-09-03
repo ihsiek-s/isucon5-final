@@ -30,16 +30,23 @@
 
 - name: copy postgresql configurations
   copy:
-    src: '{{ items.src }}'
-    dest: '{{ items.dest }}'
+    src: '{{ item.src }}'
+    dest: '{{ item.dest }}'
     owner: postgres
     group: postgres
     mode: 0644
   with_items:
-    - { src: postgresql.conf, dest: /etc/postgresql/9.4/main/postgresql.conf }
+    - { src: postgresql.conf.ubuntu, dest: /etc/postgresql/9.4/main/postgresql.conf }
     - { src: pg_hba.conf, dest: /etc/postgresql/9.4/main/pg_hba.conf }
   notify:
     - restart postgresql
+  when: ansible_os_family == 'Debian'
+
+- name: Enable and start service postgresql
+  systemd:
+    name: postgresql
+    state: started
+    enabled: true
   when: ansible_os_family == 'Debian'
 
 - name: Install python-psycopg2 for CentOS 7
@@ -64,23 +71,24 @@
 
 - name: copy postgresql configurations
   copy:
-    src: '{{ items.src }}'
-    dest: '{{ items.dest }}'
+    src: '{{ item.src }}'
+    dest: '{{ item.dest }}'
     owner: postgres
     group: postgres
     mode: 0644
   with_items:
-    - { src: postgresql.conf, dest: /var/lib/pgsql/9.4/data/postgresql.conf }
+    - { src: postgresql.conf.centos, dest: /var/lib/pgsql/9.4/data/postgresql.conf }
     - { src: pg_hba.conf, dest: /var/lib/pgsql/9.4/data/pg_hba.conf }
   notify:
     - restart postgresql
-  when: ansible_os_family == 'Debian'
+  when: ansible_os_family == 'RedHat'
 
-- name: Enable and start service postgresql
+- name: Enable and start service postgresql for CentOS 7
   systemd:
-    name: postgresql
+    name: postgresql-9.4
     state: started
     enabled: true
+  when: ansible_os_family == 'RedHat'
 
 - name: Add postgresql user
   postgresql_user:
