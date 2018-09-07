@@ -57,7 +57,7 @@
 
 - name: Install postgresql rpm for CentOS 7
   yum:
-    name: http://download.postgresql.org/pub/repos/yum/9.4/redhat/rhel-7-x86_64/pgdg-redhat94-9.4-3.noarch.rpm
+    name: https://download.postgresql.org/pub/repos/yum/9.4/redhat/rhel-7-x86_64/pgdg-centos94-9.4-3.noarch.rpm
     state: present
   when: ansible_os_family == 'RedHat'
 
@@ -66,10 +66,78 @@
     name: '{{ item }}'
     state: present
   with_items:
-    - "@PostgreSQL Database Server 9.4 PGDG"
+    - postgresql94
+    - postgresql94-contrib
+    - postgresql94-libs
+    - postgresql94-server
   when: ansible_os_family == 'RedHat'
 
-- name: copy postgresql configurations
+- name: Check postgresql exists
+  stat:
+    path: /var/lib/pgsql/9.4/data/PG_VERSION
+  register: dbcluster
+
+- name: postgresql initdb
+  shell: /usr/pgsql-9.4/bin/postgresql94-setup initdb
+  when: (ansible_os_family == 'RedHat' and not dbcluster.stat.exists)
+
+#- name: Generate OpenSSL private key
+#  openssl_privatekey:
+#    path: "{{ role_path }}/files/{{ selfsigned_cert.privatekey.path | basename }}"
+#  delegate_to: localhost
+#  run_once: yes
+#  when: ansible_os_family == 'RedHat'
+#
+#- name: Generate OpenSSL CSR
+#  openssl_csr:
+#    path: "{{ role_path }}/files/{{ selfsigned_cert.csr.path | basename }}"
+#    privatekey_path: "{{ role_path }}/files/{{ selfsigned_cert.privatekey.path | basename }}"
+#    common_name: DEMO
+#  delegate_to: localhost
+#  run_once: yes
+#  when: ansible_os_family == 'RedHat'
+#
+#- name: Generate OpenSSL certificate
+#  openssl_certificate:
+#    path: "{{ role_path }}/files/{{ selfsigned_cert.cert.path | basename }}"
+#    privatekey_path: "{{ role_path }}/files/{{ selfsigned_cert.privatekey.path | basename }}"
+#    csr_path: "{{ role_path }}/files/{{ selfsigned_cert.csr.path | basename }}"
+#    provider: selfsigned
+#  delegate_to: localhost
+#  run_once: yes
+#  when: ansible_os_family == 'RedHat'
+#
+
+- name: Create directories for OpenSSL certificate
+  file:
+    path: '{{ item }}'
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+  with_items:
+    - '{{ selfsigned_cert.privatekey.path | dirname }}'
+    - '{{ selfsigned_cert.cert.path | dirname }}'
+  when: ansible_os_family == 'RedHat'
+
+- name: Copy these certificate and private key
+  become: yes
+  copy:
+    src: '{{ item.src }}'
+    dest: '{{ item.dest }}'
+    owner: postgres
+    group: postgres
+    mode: '{{ item.mode }}'
+  with_items:
+    - src: '{{ selfsigned_cert.privatekey.path | basename }}'
+      dest: '{{ selfsigned_cert.privatekey.path }}'
+      mode: '0600'
+    - src: '{{ selfsigned_cert.cert.path | basename }}'
+      dest: '{{ selfsigned_cert.cert.path }}'
+      mode: '0644'
+  when: ansible_os_family == 'RedHat'
+
+- name: Copy postgresql configurations
   copy:
     src: '{{ item.src }}'
     dest: '{{ item.dest }}'
@@ -117,6 +185,7 @@
     dest: /tmp/schema.sql
 
 - name: Import dump file
+  become_user: isucon
   shell: cat /tmp/schema.sql | psql isucon5f
 
 - name: Remove dump file

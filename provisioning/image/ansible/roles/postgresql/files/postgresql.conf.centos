@@ -38,11 +38,11 @@
 # The default values of these variables are driven from the -D command-line
 # option or PGDATA environment variable, represented here as ConfigDir.
 
-data_directory = '/var/lib/pgsql/9.4/main'		# use data in another directory
+data_directory = '/var/lib/pgsql/9.4/data'		# use data in another directory
 					# (change requires restart)
-hba_file = '/var/lib/pgsql/9.4/main/pg_hba.conf'	# host-based authentication file
+hba_file = '/var/lib/pgsql/9.4/data/pg_hba.conf'	# host-based authentication file
 					# (change requires restart)
-ident_file = '/var/lib/pgsql/9.4/main/pg_ident.conf'	# ident configuration file
+ident_file = '/var/lib/pgsql/9.4/data/pg_ident.conf'	# ident configuration file
 					# (change requires restart)
 
 # If external_pid_file is not explicitly set, no extra PID file is written.
@@ -82,8 +82,8 @@ ssl = true				# (change requires restart)
 #ssl_ciphers = 'DEFAULT:!LOW:!EXP:!MD5:@STRENGTH'	# allowed SSL ciphers
 					# (change requires restart)
 #ssl_renegotiation_limit = 512MB	# amount of data between renegotiations
-ssl_cert_file = '/etc/ssl/certs/ssl-cert-snakeoil.pem'		# (change requires restart)
-ssl_key_file = '/etc/ssl/private/ssl-cert-snakeoil.key'		# (change requires restart)
+ssl_cert_file = '/etc/pki/tls/certs/ssl.crt'		# (change requires restart)
+ssl_key_file = '/etc/pki/tls/private/ssl.key'		# (change requires restart)
 #ssl_ca_file = ''			# (change requires restart)
 #ssl_crl_file = ''			# (change requires restart)
 #password_encryption = on

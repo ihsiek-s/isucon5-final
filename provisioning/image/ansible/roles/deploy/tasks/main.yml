@@ -13,6 +13,7 @@
     owner: isucon
     group: isucon
     mode: 0755
+
 - name: Set deploy key
   copy:
     src: deploy_id_rsa
@@ -71,10 +72,10 @@
   args:
     chdir: /home/isucon/webapp/node
 
-- name: java
-  shell: ./mvnw clean package -Dmaven.test.skip=true
-  args:
-    chdir: /home/isucon/webapp/java
+#- name: java
+#  shell: ./mvnw clean package -Dmaven.test.skip=true
+#  args:
+#    chdir: /home/isucon/webapp/java
 
 - name: Copy requirements.txt
   copy:
@@ -107,10 +108,10 @@
   args:
     chdir: /home/isucon/webapp/golang
 
-- name: scala
-  shell: ./sbt launcher
-  args:
-    chdir: /home/isucon/webapp/scala
+#- name: scala
+#  shell: ./sbt launcher
+#  args:
+#    chdir: /home/isucon/webapp/scala
 
 - name: Run initial query
   shell: cat ./initialize.sql | sudo -u isucon psql isucon5f
@@ -139,10 +140,26 @@
     - perl
     - php
     - node
-    - java
+#    - java
     - python
     - golang
-    - scala
+#    - scala
+  when: ansible_os_family == 'Debian'
+
+- name: Copy supervisor conf
+  copy:
+    src: 'supervisor.{{ item }}.conf'
+    dest: '/etc/supervisord.d/{{ item }}.ini'
+  with_items:
+    - ruby
+    - perl
+    - php
+    - node
+#    - java
+    - python
+    - golang
+#    - scala
+  when: ansible_os_family == 'RedHat'
 
 - name: Add to supervisorctl
   supervisorctl:
@@ -153,10 +170,18 @@
     - perl
     - php
     - node
-    - java
+#    - java
     - python
     - golang
-    - scala
+#    - scala
+  when: ansible_os_family == 'Debian'
+
+- name: Enable and start service supervisord
+  systemd:
+    name: supervisord
+    state: started
+    enabled: true
+  when: ansible_os_family == 'RedHat'
 
 - name: default application
   supervisorctl:

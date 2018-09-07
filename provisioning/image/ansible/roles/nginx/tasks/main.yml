@@ -1,9 +1,15 @@
 ---
-- name: Install nginx
+- name: Install nginx for Ubuntu
   apt:
     name: nginx
     state: present
   when: ansible_os_family == 'Debian'
+
+- name: Install nginx for CentOS
+  yum:
+    name: nginx
+    state: present
+  when: ansible_os_family == 'RedHat'
 
 - name: Enable and start service nginx
   systemd:
@@ -23,7 +29,3 @@
     - nginx.php.conf
   notify:
     - reload nginx
-- name:
-  apt:
-    name: python-psycopg2
-    state: present

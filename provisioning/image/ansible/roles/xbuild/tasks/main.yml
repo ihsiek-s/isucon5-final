@@ -39,7 +39,7 @@
     mode: 0644
 
 - name: Install golang
-  command: /home/isucon/.xbuild/go-install 1.5 /home/isucon/.local/go
+  command: /home/isucon/.xbuild/go-install 1.8 /home/isucon/.local/go
   args:
     creates: /home/isucon/.local/go/bin/go
 
